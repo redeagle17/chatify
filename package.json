@@ -20,5 +20,8 @@
     "url": "https://github.com/redeagle17/chatify/issues"
   },
   "homepage": "https://github.com/redeagle17/chatify#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "cloudinary": "^2.8.0"
+  }
 }
