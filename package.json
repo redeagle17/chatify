@@ -22,6 +22,8 @@
   "homepage": "https://github.com/redeagle17/chatify#readme",
   "description": "",
   "dependencies": {
+    "@arcjet/inspect": "^1.0.0-beta.10",
+    "@arcjet/node": "^1.0.0-beta.10",
     "cloudinary": "^2.8.0"
   }
 }
