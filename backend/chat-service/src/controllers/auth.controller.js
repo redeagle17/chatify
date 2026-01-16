@@ -1,9 +1,8 @@
-import { sendWelcomeEmail } from "../emails/emailHandlers.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
-import { ENV } from "../lib/env.js";
 import cloudinary from "../lib/cloudinary.js";
+import { publishToQueue } from "../lib/rabbitmq.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -55,15 +54,6 @@ export const signup = async (req, res) => {
         profilePic: newUser.profilePic,
       });
 
-      try {
-        await sendWelcomeEmail(
-          savedUser.email,
-          savedUser.fullName,
-          ENV.CLIENT_URL
-        );
-      } catch (error) {
-        console.error("Failed to send welcome email:", error);
-      }
     } else {
       res.status(400).json({ message: "Invalid user data" });
     }
@@ -127,6 +117,87 @@ export const updateProfile = async (req, res) => {
     res.status(200).json(updatedUser);
   } catch (error) {
     console.log("Error in update profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const sendOtp = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User with this email not found" });
+    }
+    
+    const rateLimitKey = `otp_rate_limit_${email}`;
+    const existing = await redisClient.get(rateLimitKey);
+    if (existing) {
+      return res.status(429).json({ message: "OTP request limit exceeded. Please try again later." });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpKey = `otp_${email}`;
+
+    await redisClient.set(otpKey, otp, {
+      EX: 300, // OTP valid for 5 minutes
+    });
+    await redisClient.set(rateLimitKey, "true", {
+      EX: 60, // 1 minute window
+    });
+
+    const message = {
+      to: email,
+      subject: "OTP for Chatify Login",
+      body: `Your OTP is ${otp}. It is valid for 5 minutes`,
+    };
+
+    await publishToQueue("send-otp", message);
+
+    res.status(200).json({ message: "OTP sent successfully" });
+
+  }  catch (error) {
+    console.error("Error in send OTP controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ message: "Email and OTP are required" });
+  }
+
+  try {
+    const otpKey = `otp_${email}`;
+    const storedOtp = await redisClient.get(otpKey);
+
+    if (storedOtp !== otp) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User with this email not found" });
+    }
+
+    await redisClient.del(otpKey);
+
+    generateToken(user._id, res);
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.error("Error in verify OTP controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -6,8 +6,9 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
+    "build": "npm install --prefix backend/chat-service && npm install --prefix backend/mail-service && npm install --prefix frontend && npm run build --prefix frontend",
+    "start": "npm run start --prefix backend/chat-service & npm run start --prefix backend/mail-service",
+    "dev": "npm run dev --prefix backend/chat-service & npm run dev --prefix backend/mail-service"
   },
   "repository": {
     "type": "git",
