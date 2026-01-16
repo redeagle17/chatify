@@ -72,6 +72,13 @@ function LoginPage() {
                   </button>
                 </form>
 
+                {/* LOGIN WITH OTP BUTTON */}
+                <div className="mt-4 text-center">
+                  <Link to="/login-otp" className="auth-link">
+                    Login with OTP
+                  </Link>
+                </div>
+
                 <div className="mt-6 text-center">
                   <Link to="/signup" className="auth-link">
                     Don't have an account? Sign Up
