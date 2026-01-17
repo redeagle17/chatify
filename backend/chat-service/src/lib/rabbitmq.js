@@ -22,14 +22,20 @@ export const connectRabbitMQ = async () => {
 };
 
 export const publishToQueue = async (queueName, message) => {
-  if (!channel) {
-    console.log("Rabbitmq channel is not initalized");
-    return;
+  try {
+    if (!channel) {
+      throw new Error("RabbitMQ channel is not initialized");
+    }
+
+    await channel.assertQueue(queueName, { durable: true });
+
+    channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), {
+      persistent: true,
+    });
+
+    console.log(`Message published to queue: ${queueName}`);
+  } catch (error) {
+    console.error(`Failed to publish message to queue ${queueName}:`, error);
+    throw error;
   }
-
-  await channel.assertQueue(queueName, { durable: true });
-
-  channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), {
-    persistent: true,
-  });
 };
