@@ -3,13 +3,16 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:4000" : "/";
+const BASE_URL =
+  import.meta.env.MODE === "development" ? "http://localhost:4000" : "/";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
   isCheckingAuth: true,
   isSigningUp: false,
   isLoggingIn: false,
+  isSendingOtp: false,
+  isVerifyingOtp: false,
   socket: null,
   onlineUsers: [],
 
@@ -54,6 +57,37 @@ export const useAuthStore = create((set, get) => ({
       toast.error(error.response.data.message);
     } finally {
       set({ isLoggingIn: false });
+    }
+  },
+
+  sendOtp: async (data) => {
+    set({ isSendingOtp: true });
+    try {
+      const res = await axiosInstance.post("/auth/send-otp", data);
+      toast.success("OTP sent successfully");
+      return true;
+    } catch (error) {
+      toast.error(error.response.data.message);
+      return false;
+    } finally {
+      set({ isSendingOtp: false });
+    }
+  },
+
+  verifyOtp: async (data) => {
+    set({ isVerifyingOtp: true });
+    try {
+      const res = await axiosInstance.post("/auth/verify-otp", data);
+      set({ authUser: res.data });
+
+      toast.success("Logged in successfully");
+      get().connectSocket();
+      return true;
+    } catch (error) {
+      toast.error(error.response.data.message);
+      return false;
+    } finally {
+      set({ isVerifyingOtp: false });
     }
   },
 

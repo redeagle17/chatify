@@ -6,6 +6,16 @@ import cors from "cors";
 import { connectDB } from "./lib/db.js";
 import { ENV } from "./lib/env.js";
 import { app, server } from "./lib/socket.js";
+import redisClient from "./lib/redis.js";
+import { connectRabbitMQ } from "./lib/rabbitmq.js";
+
+connectRabbitMQ();
+
+redisClient.connect().then(() => {
+  console.log("REDIS CONNECTED");
+}).catch((err) => {
+  console.error("Error connecting to REDIS:", err);
+});
 
 const __dirname = path.resolve();
 
