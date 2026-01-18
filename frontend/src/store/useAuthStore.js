@@ -63,7 +63,7 @@ export const useAuthStore = create((set, get) => ({
   sendOtp: async (data) => {
     set({ isSendingOtp: true });
     try {
-      const res = await axiosInstance.post("/auth/send-otp", data);
+      const res = await axiosInstance.post("/auth/login-otp", data);
       toast.success("OTP sent successfully");
       return true;
     } catch (error) {
