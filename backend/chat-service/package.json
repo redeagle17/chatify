@@ -12,9 +12,12 @@
   "license": "ISC",
   "description": "Chat service microservice for Chatify",
   "dependencies": {
+    "@arcjet/inspect": "^1.0.0-beta.17",
+    "@arcjet/node": "^1.0.0-beta.17",
     "amqplib": "^0.10.9",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
